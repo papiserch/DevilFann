@@ -1,24 +1,31 @@
-name: Build Devil Fan
+name: Build BabyAir (Windows VST3)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  windows:
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DDEVILFAN_COPY=OFF
+        run: cmake -B build -A x64
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --parallel
 
-      - name: Upload VST3
+      - name: Package VST3
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item -Recurse "build/BabyAir_artefacts/Release/VST3/BabyAir.vst3" "dist/BabyAir.vst3"
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DevilFan-VST3-Windows
-          path: build/DevilFan_artefacts/Release/VST3/*.vst3
+          name: BabyAir-VST3-Windows
+          path: dist
